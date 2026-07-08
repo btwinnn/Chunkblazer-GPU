@@ -22,7 +22,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.client.plugins.chunkblazer.gpu.runelite;
+package net.runelite.client.plugins.chunkblazergpu.runelite;
 
 import java.nio.IntBuffer;
 import java.util.ArrayDeque;
@@ -39,11 +39,11 @@ import net.runelite.api.Model;
 import net.runelite.api.Perspective;
 import net.runelite.api.Scene;
 import net.runelite.api.WorldView;
-import static net.runelite.client.plugins.chunkblazer.gpu.runelite.FacePrioritySorter.MAX_DIAMETER;
-import static net.runelite.client.plugins.chunkblazer.gpu.runelite.FacePrioritySorter.zsortHead;
-import static net.runelite.client.plugins.chunkblazer.gpu.runelite.FacePrioritySorter.zsortNext;
-import static net.runelite.client.plugins.chunkblazer.gpu.runelite.FacePrioritySorter.zsortTail;
-import static net.runelite.client.plugins.chunkblazer.gpu.runelite.GpuPlugin.uniBase;
+import static net.runelite.client.plugins.chunkblazergpu.runelite.FacePrioritySorter.MAX_DIAMETER;
+import static net.runelite.client.plugins.chunkblazergpu.runelite.FacePrioritySorter.zsortHead;
+import static net.runelite.client.plugins.chunkblazergpu.runelite.FacePrioritySorter.zsortNext;
+import static net.runelite.client.plugins.chunkblazergpu.runelite.FacePrioritySorter.zsortTail;
+import static net.runelite.client.plugins.chunkblazergpu.runelite.GpuPlugin.uniBase;
 import org.lwjgl.BufferUtils;
 import static org.lwjgl.opengl.GL33C.*;
 

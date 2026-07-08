@@ -1,13 +1,15 @@
-package net.runelite.client.plugins.chunkblazer.gpu;
+package net.runelite.client.plugins.chunkblazergpu;
 
 import java.awt.Color;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
-import net.runelite.client.plugins.chunkblazer.ChunkBlazerConfig;
+import net.runelite.client.config.ConfigManager;
+import net.runelite.client.plugins.chunkblazergpu.runelite.GpuPluginConfig;
 
 import static org.lwjgl.opengl.GL33C.*;
 
@@ -18,19 +20,20 @@ public class ChunkBlazerGpuAddon
 	private Client client;
 
 	@Inject
-	private ChunkBlazerConfig config;
+	private GpuPluginConfig config;
 
-	// Why we DON'T @Inject ChunkBlazerPlugin here: this addon lives in the
-	// ChunkBlazerGpuPlugin child injector, which has no binding for the main
-	// ChunkBlazerPlugin (each RuneLite plugin gets its own child injector).
-	// Asking Guice for ChunkBlazerPlugin triggers Just-In-Time construction
-	// of a *fresh* ChunkBlazerPlugin instance — and ChunkBlazerPlugin's own
-	// @Inject graph contains ChunkBlazerSceneOverlay which itself injects
-	// ChunkBlazerPlugin, so JIT recurses indefinitely:
-	//   "Recursive load of: ChunkBlazerPlugin.<init>()"
-	// Instead, read the unlocked-region set directly from the config string,
-	// which is the same thing ChunkBlazerPlugin.isRegionUnlocked does
-	// internally. Cached per-frame to avoid re-parsing.
+	// STANDALONE: this plugin has no compile-time dependency on the main
+	// ChunkBlazer plugin. The unlocked-region set is read straight from the
+	// main plugin's persisted config value ("chunkblazer" group,
+	// "unlockedChunks" key) via ConfigManager — the same string
+	// ChunkBlazerPlugin.getUnlockedRegionIds() parses. If the main plugin
+	// isn't installed the value is null and everything renders locked-grey,
+	// which is the honest representation.
+	@Inject
+	private ConfigManager configManager;
+
+	private static final String CHUNKBLAZER_GROUP = "chunkblazer";
+	private static final String UNLOCKED_CHUNKS_KEY = "unlockedChunks";
 
 	// The GPU plugin renders the extended 184x184 scene, which can span more
 	// regions than the old fixed 16-slot list could hold — that overflow is why
@@ -39,12 +42,13 @@ public class ChunkBlazerGpuAddon
 	// rendered scene. GRID must match CHUNKBLAZER_GRID in vert.glsl.
 	private static final int GRID = 7;
 	private final int[] lockedGrid = new int[GRID * GRID];
-	// Free (dungeon / non-overworld) regions from Free_Chunks.json, loaded once and
-	// cached. They render full-colour like unlocked regions. Loaded here directly
-	// (not via ChunkBlazerPlugin.isRegionUnlocked) because this addon lives in a
-	// separate child injector and can't reference the main plugin — same reason
-	// the unlocked set is read from config rather than the plugin.
-	private Set<Integer> freeRegions = null;
+
+	// Prifddinas: the city's real regions sit far above the overworld surface
+	// band (regionY 94-95), so the free-dungeon coordinate rule would treat them
+	// as always-accessible. Must mirror ChunkBlazerPlugin.PRIF_CITY_REGIONS so
+	// the shader greys the locked city like the rest of the plugin does.
+	private static final Set<Integer> PRIF_CITY_REGIONS = new HashSet<>(Arrays.asList(
+		12894, 12895, 13150, 13151));
 
 	private boolean isValid;
 	private int glProgram;
@@ -108,10 +112,8 @@ public class ChunkBlazerGpuAddon
 			glUseProgram(glProgram);
 		}
 
-		// Region Locker reads these from a static singleton it owns; we read
-		// from ChunkBlazer's config instead. Defaults map to slaytostay's
-		// out-of-the-box settings (50% gray amount, soft black tint, soft
-		// border) so the visual feels familiar.
+		// Defaults map to slaytostay's out-of-the-box settings (50% gray amount,
+		// soft black tint, soft border) so the visual feels familiar.
 		Color tint = config.gpuGrayTint();
 		glUniform1i(uniUseHardBorder, config.gpuHardBorder() ? 1 : 0);
 		glUniform1f(uniGrayAmount, config.gpuGrayAmount() / 255f);
@@ -125,13 +127,8 @@ public class ChunkBlazerGpuAddon
 
 		var mapRegions = vw.getMapRegions();
 
-		// Snapshot unlocked-region set once per frame from the config string,
-		// rather than calling into ChunkBlazerPlugin (cross-injector, see
-		// note on the class fields). Same parsing as
-		// ChunkBlazerPlugin.getUnlockedRegionIds(), just inlined.
+		// Snapshot unlocked-region set once per frame from the config string.
 		Set<Integer> unlocked = readUnlockedRegionIds();
-		// Dungeon / non-overworld regions are always full-colour (never greyed).
-		Set<Integer> free = freeRegions();
 
 		// Don't grey out instanced areas (raids, GoTR, etc.) when the instance
 		// happens to share coordinates with an unlocked region — the shader
@@ -143,7 +140,7 @@ public class ChunkBlazerGpuAddon
 		{
 			for (int region : mapRegions)
 			{
-				if (isAccessible(region, unlocked, free))
+				if (isAccessible(region, unlocked))
 				{
 					instanceCoincidesWithUnlockedRegion = true;
 					break;
@@ -175,7 +172,7 @@ public class ChunkBlazerGpuAddon
 				for (int gy = 0; gy < GRID; ++gy)
 				{
 					int regionId = ((gridBaseRegionX + gx) << 8) | (gridBaseRegionY + gy);
-					lockedGrid[gx * GRID + gy] = isAccessible(regionId, unlocked, free) ? 0 : 1;
+					lockedGrid[gx * GRID + gy] = isAccessible(regionId, unlocked) ? 0 : 1;
 				}
 			}
 
@@ -199,69 +196,37 @@ public class ChunkBlazerGpuAddon
 	}
 
 	/**
-	 * A region renders full-colour (not greyed) if it's unlocked, an explicit
-	 * free-chunk override, or an off-map dungeon by the coordinate rule: regionY
-	 * outside the overworld surface band 39..64. Mirrors
-	 * ChunkBlazerPlugin.isFreeRegion so the shader and the rest of the plugin agree.
+	 * A region renders full-colour (not greyed) if it's unlocked, or is an
+	 * off-map dungeon by the coordinate rule: regionY outside the overworld
+	 * surface band 39..64 — EXCEPT the Prifddinas city regions, which live in
+	 * instance coordinates but are a real lockable surface city. Mirrors
+	 * ChunkBlazerPlugin.isFreeRegion / isRegionUnlocked so the shader and the
+	 * main plugin agree. (Free chunks need no special case: since they became
+	 * unlock-on-demand they appear in unlockedChunks once unlocked, and are
+	 * correctly grey while still locked.)
 	 */
-	private boolean isAccessible(int regionId, Set<Integer> unlocked, Set<Integer> free)
+	private boolean isAccessible(int regionId, Set<Integer> unlocked)
 	{
-		int regionY = regionId & 0xFF;
-		if (regionY < 39 || regionY > 64)
+		if (!PRIF_CITY_REGIONS.contains(regionId))
 		{
-			return true;
-		}
-		return unlocked.contains(regionId) || free.contains(regionId);
-	}
-
-	/**
-	 * Load (and cache) the free / dungeon region IDs from Free_Chunks.json so the
-	 * shader leaves them full-colour. Read once; on failure returns an empty set
-	 * and the addon behaves as before. Absolute classpath path so it resolves from
-	 * this {@code .gpu} subpackage.
-	 */
-	private Set<Integer> freeRegions()
-	{
-		if (freeRegions != null)
-		{
-			return freeRegions;
-		}
-		Set<Integer> ids = new HashSet<>();
-		try (java.io.InputStream is = ChunkBlazerConfig.class.getResourceAsStream(
-			"/net/runelite/client/plugins/chunkblazer/Free_Chunks.json"))
-		{
-			if (is != null)
+			int regionY = regionId & 0xFF;
+			if (regionY < 39 || regionY > 64)
 			{
-				String json = new String(is.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
-				com.google.gson.JsonObject obj = new com.google.gson.Gson().fromJson(json, com.google.gson.JsonObject.class);
-				if (obj != null && obj.has("free_regions") && obj.get("free_regions").isJsonArray())
-				{
-					for (com.google.gson.JsonElement el : obj.getAsJsonArray("free_regions"))
-					{
-						ids.add(el.getAsInt());
-					}
-				}
+				return true;
 			}
 		}
-		catch (Exception e)
-		{
-			log.warn("GPU addon: failed to load Free_Chunks.json: {}", e.getMessage());
-		}
-		freeRegions = ids;
-		log.debug("GPU addon: loaded {} free (dungeon) regions", ids.size());
-		return freeRegions;
+		return unlocked.contains(regionId);
 	}
 
 	/**
-	 * Parse {@code chunkblazer.unlockedChunks} (comma-separated region IDs) into
-	 * a {@code Set<Integer>}. Mirrors ChunkBlazerPlugin.getUnlockedRegionIds()
-	 * but inlined here so the addon doesn't need a cross-injector reference to
-	 * ChunkBlazerPlugin (which would trigger Guice JIT recursion — see class
-	 * comment). Returns an empty set if the config is missing or malformed.
+	 * Parse the main plugin's {@code chunkblazer.unlockedChunks} config value
+	 * (comma-separated region IDs) into a {@code Set<Integer>}. Read through
+	 * ConfigManager so this plugin needs no compile-time dependency on
+	 * ChunkBlazer. Returns an empty set if missing or malformed.
 	 */
 	private Set<Integer> readUnlockedRegionIds()
 	{
-		String chunkList = config.unlockedChunks();
+		String chunkList = configManager.getConfiguration(CHUNKBLAZER_GROUP, UNLOCKED_CHUNKS_KEY);
 		if (chunkList == null || chunkList.isEmpty())
 		{
 			return java.util.Collections.emptySet();

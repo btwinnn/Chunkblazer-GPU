@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 logarrhytmic <https://github.com/logarrhythmic>
+ * Copyright (c) 2018, Lotto <https://github.com/devLotto>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,23 +22,23 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.client.plugins.chunkblazer.gpu.runelite.config;
+package net.runelite.client.plugins.chunkblazergpu.runelite.config;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public enum UIScalingMode
+public enum AntiAliasingMode
 {
-	NEAREST("Nearest Neighbor"),
-	LINEAR("Bilinear"),
-	MITCHELL("Bicubic (Mitchell)"),
-	CATMULL_ROM("Bicubic (Catmull-Rom)"),
-	XBR("xBR"),
-	HYBRID("Hybrid");
+	DISABLED("Disabled", 0),
+	MSAA_2("MSAA x2", 2),
+	MSAA_4("MSAA x4", 4),
+	MSAA_8("MSAA x8", 8),
+	MSAA_16("MSAA x16", 16);
 
 	private final String name;
+	private final int samples;
 
 	@Override
 	public String toString()

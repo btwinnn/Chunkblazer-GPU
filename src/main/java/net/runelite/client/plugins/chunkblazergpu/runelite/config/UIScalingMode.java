@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Adam <Adam@sigterm.info>
+ * Copyright (c) 2019 logarrhytmic <https://github.com/logarrhythmic>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,46 +22,27 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.client.plugins.chunkblazer.gpu.runelite;
+package net.runelite.client.plugins.chunkblazergpu.runelite.config;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-class GpuFloatBuffer
+@Getter
+@RequiredArgsConstructor
+public enum UIScalingMode
 {
-	private final FloatBuffer buffer;
+	NEAREST("Nearest Neighbor"),
+	LINEAR("Bilinear"),
+	MITCHELL("Bicubic (Mitchell)"),
+	CATMULL_ROM("Bicubic (Catmull-Rom)"),
+	XBR("xBR"),
+	HYBRID("Hybrid");
 
-	GpuFloatBuffer(int size)
-	{
-		buffer = allocateDirect(size);
-	}
+	private final String name;
 
-	GpuFloatBuffer put(float f)
+	@Override
+	public String toString()
 	{
-		buffer.put(f);
-		return this;
-	}
-
-	void flip()
-	{
-		buffer.flip();
-	}
-
-	void clear()
-	{
-		buffer.clear();
-	}
-
-	FloatBuffer getBuffer()
-	{
-		return buffer;
-	}
-
-	static FloatBuffer allocateDirect(int size)
-	{
-		return ByteBuffer.allocateDirect(size * Float.BYTES)
-			.order(ByteOrder.nativeOrder())
-			.asFloatBuffer();
+		return name;
 	}
 }

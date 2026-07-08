@@ -22,7 +22,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.client.plugins.chunkblazer.gpu.runelite;
+package net.runelite.client.plugins.chunkblazergpu.runelite;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.primitives.Ints;
@@ -70,9 +70,9 @@ import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginInstantiationException;
 import net.runelite.client.plugins.PluginManager;
-import net.runelite.client.plugins.chunkblazer.gpu.runelite.config.AntiAliasingMode;
-import net.runelite.client.plugins.chunkblazer.gpu.runelite.config.UIScalingMode;
-import net.runelite.client.plugins.chunkblazer.gpu.runelite.template.Template;
+import net.runelite.client.plugins.chunkblazergpu.runelite.config.AntiAliasingMode;
+import net.runelite.client.plugins.chunkblazergpu.runelite.config.UIScalingMode;
+import net.runelite.client.plugins.chunkblazergpu.runelite.template.Template;
 import net.runelite.client.ui.ClientUI;
 import net.runelite.client.ui.DrawManager;
 import net.runelite.rlawt.AWTContext;

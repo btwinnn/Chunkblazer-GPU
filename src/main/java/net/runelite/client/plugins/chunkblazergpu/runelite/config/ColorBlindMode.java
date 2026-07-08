@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Adam <Adam@sigterm.info>
+ * Copyright (c) 2020 Ben Poulson <https://github.com/benpoulson>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,12 +22,12 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.client.plugins.chunkblazer.gpu.runelite;
+package net.runelite.client.plugins.chunkblazergpu.runelite.config;
 
-class ShaderException extends RuntimeException
+public enum ColorBlindMode
 {
-	ShaderException(String message)
-	{
-		super(message);
-	}
+	NONE,
+	PROTANOPE,
+	DEUTERANOPE,
+	TRITANOPE;
 }

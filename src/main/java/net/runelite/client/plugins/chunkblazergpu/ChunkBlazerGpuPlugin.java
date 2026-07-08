@@ -22,12 +22,11 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.client.plugins.chunkblazer.gpu;
+package net.runelite.client.plugins.chunkblazergpu;
 
 import com.google.inject.Provides;
-import net.runelite.client.plugins.chunkblazer.ChunkBlazerConfig;
-import net.runelite.client.plugins.chunkblazer.gpu.runelite.GpuPlugin;
-import net.runelite.client.plugins.chunkblazer.gpu.runelite.GpuPluginConfig;
+import net.runelite.client.plugins.chunkblazergpu.runelite.GpuPlugin;
+import net.runelite.client.plugins.chunkblazergpu.runelite.GpuPluginConfig;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.callback.ClientThread;
@@ -73,22 +72,13 @@ public class ChunkBlazerGpuPlugin extends Plugin
 		}
 	}
 
-	// This is region locker's own
+	// STANDALONE: no binding for the main plugin's ChunkBlazerConfig anymore.
+	// The greyscale settings live in GpuPluginConfig, and the unlocked-chunk
+	// set is read by the addon through ConfigManager as a plain string.
 	@Provides
 	GpuPluginConfig provideConfig(ConfigManager configManager)
 	{
 		return configManager.getConfig(GpuPluginConfig.class);
-	}
-
-	// ChunkBlazerGpuAddon @Inject's ChunkBlazerConfig. Each RuneLite plugin has
-	// its own Guice child injector, and the parent ChunkBlazerPlugin's @Provides
-	// for ChunkBlazerConfig is NOT visible from ours. Bind our own copy here.
-	// Both call configManager.getConfig(...) on the same singleton, so the
-	// returned proxies are equivalent — they read the same on-disk profile keys.
-	@Provides
-	ChunkBlazerConfig provideChunkBlazerConfig(ConfigManager configManager)
-	{
-		return configManager.getConfig(ChunkBlazerConfig.class);
 	}
 
 	@Inject

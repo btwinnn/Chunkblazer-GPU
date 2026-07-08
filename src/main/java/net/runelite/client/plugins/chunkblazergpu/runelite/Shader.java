@@ -23,7 +23,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.client.plugins.chunkblazer.gpu.runelite;
+package net.runelite.client.plugins.chunkblazergpu.runelite;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.util.ArrayList;
@@ -31,7 +31,7 @@ import java.util.List;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.client.plugins.chunkblazer.gpu.runelite.template.Template;
+import net.runelite.client.plugins.chunkblazergpu.runelite.template.Template;
 import static org.lwjgl.opengl.GL33C.*;
 
 @Slf4j

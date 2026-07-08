@@ -22,7 +22,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.client.plugins.chunkblazer.gpu.runelite;
+package net.runelite.client.plugins.chunkblazergpu.runelite;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,9 +30,9 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Renderable;
 import net.runelite.api.Scene;
-import static net.runelite.client.plugins.chunkblazer.gpu.runelite.GpuPlugin.uniBase;
-import static net.runelite.client.plugins.chunkblazer.gpu.runelite.GpuPlugin.uniEntityProj;
-import static net.runelite.client.plugins.chunkblazer.gpu.runelite.GpuPlugin.uniEntityTint;
+import static net.runelite.client.plugins.chunkblazergpu.runelite.GpuPlugin.uniBase;
+import static net.runelite.client.plugins.chunkblazergpu.runelite.GpuPlugin.uniEntityProj;
+import static net.runelite.client.plugins.chunkblazergpu.runelite.GpuPlugin.uniEntityTint;
 import static org.lwjgl.opengl.GL33C.*;
 
 class VAO

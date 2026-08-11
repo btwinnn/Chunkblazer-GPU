@@ -1,0 +1,57 @@
+// ChunkBlazer GPU — RuneLite Plugin Hub build file.
+//
+// Standalone Gradle build for a Plugin Hub submission. The Hub only ever reads
+// this build.gradle. Package is com.chunkblazer.gpu (net.runelite.* is reserved).
+
+plugins {
+	id 'java'
+	id 'checkstyle'
+}
+
+repositories {
+	mavenLocal()
+	maven {
+		url = 'https://repo.runelite.net'
+		content {
+			includeGroupByRegex("net\\.runelite.*")
+		}
+	}
+	mavenCentral()
+}
+
+def runeLiteVersion = 'latest.release'
+
+dependencies {
+	// RuneLite client is provided at runtime by the host; it brings LWJGL, Guava
+	// and Guice transitively, so ChunkBlazer GPU ships ZERO new dependencies.
+	compileOnly group: 'net.runelite', name: 'client', version: runeLiteVersion
+
+	compileOnly 'org.projectlombok:lombok:1.18.30'
+	annotationProcessor 'org.projectlombok:lombok:1.18.30'
+}
+
+group = 'com.chunkblazer.gpu'
+version = '1.0.0'
+
+tasks.withType(JavaCompile).configureEach {
+	options.encoding = 'UTF-8'
+	options.release.set(11)
+}
+
+// RuneLite's own ruleset (vendored under config/checkstyle/). Run before submit:
+//   ./gradlew checkstyleMain
+checkstyle {
+	toolVersion = '10.12.7'
+	configFile = file('config/checkstyle/checkstyle.xml')
+	configDirectory = file('config/checkstyle')
+	maxErrors = 0
+	maxWarnings = 0
+}
+
+tasks.withType(Checkstyle).configureEach {
+	ignoreFailures = true
+	reports {
+		xml.required = true
+		html.required = true
+	}
+}

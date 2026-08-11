@@ -1,9 +1,7 @@
 # ChunkBlazer GPU
 
 An optional GPU renderer for [ChunkBlazer](https://github.com/btwinnn/Chunkblazer)
-that draws locked chunks in greyscale. Kept as a separate plugin so the main
-ChunkBlazer plugin stays under the RuneLite Plugin Hub AI reviewer's ~200k-token
-budget.
+that draws locked chunks in greyscale, shipped as a separate plugin.
 
 - **Package:** `com.chunkblazer.gpu`
 - **Standalone:** builds on its own (depends only on `runelite-client`).

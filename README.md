@@ -1,15 +1,40 @@
 # ChunkBlazer GPU
 
-Standalone RuneLite GPU plugin extracted from the main ChunkBlazer plugin to keep
-that plugin under the RuneLite AI reviewer's 200k-token budget. Provides the
-locked-chunk greyscale rendering.
+An optional GPU renderer for [ChunkBlazer](https://github.com/btwinnn/Chunkblazer)
+that draws locked chunks in greyscale. Kept as a separate plugin so the main
+ChunkBlazer plugin stays under the RuneLite Plugin Hub AI reviewer's ~200k-token
+budget.
 
-Package: `net.runelite.client.plugins.chunkblazer.gpu`
+- **Package:** `com.chunkblazer.gpu`
+- **Standalone:** builds on its own (depends only on `runelite-client`).
+- **Config group:** `chunkblazergpu` (kept separate from the core GPU plugin).
+- Not compatible with 117 HD. Declares `conflicts = "GPU"` (core GPU plugin).
 
-## Not yet buildable standalone
-Needs a build file (pom.xml / build.gradle) added, and depends on two classes
-that still live in the main ChunkBlazer plugin:
-- `ChunkBlazerConfig` (read by `ChunkBlazerGpuAddon`)
-- `ShadingLevel`
+## Credits / derivation
 
-Copy or share those when wiring up the build here.
+Derived from two BSD-2-Clause projects — see [`LICENSE`](LICENSE):
+
+- [RuneLite GPU plugin](https://github.com/runelite/runelite) — Adam and the RuneLite contributors
+- [Region Locker GPU](https://github.com/slaytostay/region-locker) — Slay to Stay
+
+## Build
+
+```
+./gradlew build
+```
+
+`runelite-client` is `compileOnly` and provides LWJGL/Guava/Guice transitively,
+so this plugin ships **zero new runtime dependencies**. Run the RuneLite ruleset
+before submitting:
+
+```
+./gradlew checkstyleMain
+```
+
+## Dev client
+
+`com.chunkblazer.gpu` is outside RuneLite's core plugin scan
+(`net.runelite.client.plugins`), so the dev client loads it via
+`ExternalPluginManager.loadBuiltin` — the same package-agnostic path the Hub uses.
+The ChunkBlazer `run-chunkblazer.bat` copies this repo in and loads both plugins
+through `com.chunkblazer.DevLauncher`.

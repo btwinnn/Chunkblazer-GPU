@@ -13,7 +13,7 @@ that draws locked chunks in greyscale, shipped as a separate plugin.
 Derived from two BSD-2-Clause projects — see [`LICENSE`](LICENSE):
 
 - [RuneLite GPU plugin](https://github.com/runelite/runelite) — Adam and the RuneLite contributors
-- [Region Locker GPU](https://github.com/slaytostay/region-locker) — Slay to Stay
+- [Region Locker GPU](https://github.com/slaytostay/region-locker) — slaytostay
 
 ## Build
 

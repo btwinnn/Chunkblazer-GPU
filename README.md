@@ -10,10 +10,10 @@ that draws locked chunks in greyscale, shipped as a separate plugin.
 
 ## Credits / derivation
 
-Derived from two BSD-2-Clause projects — see [`LICENSE`](LICENSE):
+Derived from two BSD-2-Clause projects, see [`LICENSE`](LICENSE):
 
-- [RuneLite GPU plugin](https://github.com/runelite/runelite) — Adam and the RuneLite contributors
-- [Region Locker GPU](https://github.com/slaytostay/region-locker) — slaytostay
+- [RuneLite GPU plugin](https://github.com/runelite/runelite) by Adam and the RuneLite contributors
+- [Region Locker GPU](https://github.com/slaytostay/region-locker) by slaytostay
 
 ## Build
 
@@ -33,6 +33,6 @@ before submitting:
 
 `com.chunkblazer.gpu` is outside RuneLite's core plugin scan
 (`net.runelite.client.plugins`), so the dev client loads it via
-`ExternalPluginManager.loadBuiltin` — the same package-agnostic path the Hub uses.
+`ExternalPluginManager.loadBuiltin`, the same package-agnostic path the Hub uses.
 The ChunkBlazer `run-chunkblazer.bat` copies this repo in and loads both plugins
 through `com.chunkblazer.DevLauncher`.

@@ -49,7 +49,8 @@ checkstyle {
 }
 
 tasks.withType(Checkstyle).configureEach {
-	ignoreFailures = true
+	// No ignoreFailures: a style violation fails the local build, matching the
+	// Plugin Hub's own checkstyle gate (maxErrors/maxWarnings = 0 above).
 	reports {
 		xml.required = true
 		html.required = true

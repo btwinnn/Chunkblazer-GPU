@@ -32,6 +32,16 @@ public class ChunkBlazerGpuAddon
 	@Inject
 	private ConfigManager configManager;
 
+	// ---------------------------------------------------------------------
+	// SHARED CONTRACT WITH THE MAIN ChunkBlazer PLUGIN (keep in sync!)
+	// This plugin ships standalone (no compile-time dep on com.chunkblazer),
+	// so the following three things are hand-mirrored from the main plugin and
+	// will SILENTLY DRIFT if the main plugin changes them. If greyscale ever
+	// stops matching in-game unlocks, re-check all three against ChunkBlazer:
+	//   1. Config group/key below  -> ChunkBlazerConfig group + "unlockedChunks"
+	//   2. PRIF_CITY_REGIONS (~L50) -> ChunkBlazerPlugin.PRIF_CITY_REGIONS
+	//   3. Surface band 39..64 in isAccessible() -> ChunkBlazerPlugin surface rule
+	// ---------------------------------------------------------------------
 	private static final String CHUNKBLAZER_GROUP = "chunkblazer";
 	private static final String UNLOCKED_CHUNKS_KEY = "unlockedChunks";
 

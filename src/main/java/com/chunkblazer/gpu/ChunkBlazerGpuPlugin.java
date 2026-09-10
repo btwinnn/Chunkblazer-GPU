@@ -96,7 +96,8 @@ public class ChunkBlazerGpuPlugin extends Plugin
 	@Override
 	protected void startUp()
 	{
-		clientThread.invoke(() -> {
+		clientThread.invoke(() ->
+		{
 			gpuPlugin.start();
 			eventBus.register(gpuPlugin);
 
@@ -104,7 +105,8 @@ public class ChunkBlazerGpuPlugin extends Plugin
 			// program is bound and the GL context is current) instead of from a
 			// BeforeRender event — the latter fired at the wrong point in this
 			// FBO/zone-based GPU pipeline and produced GL_INVALID_OPERATION.
-			GpuPlugin.sceneUniformHook = () -> {
+			GpuPlugin.sceneUniformHook = () ->
+			{
 				try
 				{
 					addon.beforeRender(GpuPlugin.glProgram);
@@ -120,7 +122,8 @@ public class ChunkBlazerGpuPlugin extends Plugin
 	@Override
 	protected void shutDown()
 	{
-		clientThread.invoke(() -> {
+		clientThread.invoke(() ->
+		{
 			GpuPlugin.sceneUniformHook = null;
 			gpuPlugin.stop();
 			eventBus.unregister(gpuPlugin);

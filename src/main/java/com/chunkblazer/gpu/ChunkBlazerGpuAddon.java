@@ -229,14 +229,19 @@ public class ChunkBlazerGpuAddon
 	}
 
 	/**
-	 * Parse the main plugin's {@code chunkblazer.unlockedChunks} config value
-	 * (comma-separated region IDs) into a {@code Set<Integer>}. Read through
-	 * ConfigManager so this plugin needs no compile-time dependency on
-	 * ChunkBlazer. Returns an empty set if missing or malformed.
+	 * Parse the main plugin's {@code chunkblazer.unlockedChunks} value (comma-separated
+	 * region IDs) into a {@code Set<Integer>}. Read through ConfigManager so this plugin
+	 * needs no compile-time dependency on ChunkBlazer. Returns an empty set if missing or
+	 * malformed.
+	 *
+	 * <p>ChunkBlazer stores per-account progress in the RSProfile store (so multiple
+	 * accounts on one RuneLite profile stay independent), so this reads
+	 * {@code getRSProfileConfiguration}, not the profile-global {@code getConfiguration}.
+	 * A null RS profile (not logged in) yields an empty set, same as no unlocks.
 	 */
 	private Set<Integer> readUnlockedRegionIds()
 	{
-		String chunkList = configManager.getConfiguration(CHUNKBLAZER_GROUP, UNLOCKED_CHUNKS_KEY);
+		String chunkList = configManager.getRSProfileConfiguration(CHUNKBLAZER_GROUP, UNLOCKED_CHUNKS_KEY);
 		if (chunkList == null || chunkList.isEmpty())
 		{
 			return java.util.Collections.emptySet();

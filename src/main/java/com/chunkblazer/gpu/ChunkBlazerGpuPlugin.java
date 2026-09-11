@@ -42,7 +42,6 @@ import net.runelite.client.plugins.PluginDescriptor;
 	tags = {"chunkblazer", "gpu", "chunk", "locker", "draw distance"},
 	conflicts = "GPU",
 	loadInSafeMode = false,
-	enabledByDefault = false,
 	configName = "ChunkBlazerGpu"
 )
 public class ChunkBlazerGpuPlugin extends Plugin

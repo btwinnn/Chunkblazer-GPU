@@ -37,6 +37,8 @@ class FacePrioritySorter
 
 	private static final float[] modelProjectedX;
 	private static final float[] modelProjectedY;
+	// ChunkBlazer: vertices too close to (or behind) the camera to project.
+	private static final boolean[] nearVertex;
 
 	static final float[] modelLocalX;
 	static final float[] modelLocalY;
@@ -65,6 +67,7 @@ class FacePrioritySorter
 
 		modelProjectedX = new float[MAX_VERTEX_COUNT];
 		modelProjectedY = new float[MAX_VERTEX_COUNT];
+		nearVertex = new boolean[MAX_VERTEX_COUNT];
 
 		modelLocalX = new float[MAX_VERTEX_COUNT];
 		modelLocalY = new float[MAX_VERTEX_COUNT];
@@ -142,9 +145,17 @@ class FacePrioritySorter
 			modelLocalZ[v] = vertexZ;
 
 			p = proj.project(vertexX, vertexY, vertexZ);
-			if (p[2] < 50)
+			// ChunkBlazer: upstream returned here, dropping the WHOLE model as
+			// soon as one vertex neared the camera (tall walls right beside the
+			// player vanished). Only the faces touching such a vertex are
+			// skipped now; the GPU clips everything else at the near plane.
+			nearVertex[v] = p[2] < 50;
+			if (nearVertex[v])
 			{
-				return 0;
+				modelProjectedX[v] = 0;
+				modelProjectedY[v] = 0;
+				distances[v] = 0;
+				continue;
 			}
 
 			modelProjectedX[v] = p[0] / p[2];
@@ -170,6 +181,10 @@ class FacePrioritySorter
 				final int v1 = indices1[faceIdx];
 				final int v2 = indices2[faceIdx];
 				final int v3 = indices3[faceIdx];
+				if (nearVertex[v1] || nearVertex[v2] || nearVertex[v3])
+				{
+					continue;
+				}
 
 				final float
 					aX = modelProjectedX[v1],

@@ -147,6 +147,11 @@ public abstract class GpuPlugin extends Plugin implements DrawCallbacks
 		.add(GL_VERTEX_SHADER, "vertui.glsl")
 		.add(GL_FRAGMENT_SHADER, "fragui.glsl");
 
+	// ChunkBlazer's chunk wall along chunk borders (see ChunkBlazerGpuAddon.buildWall).
+	static final Shader WALL_PROGRAM = new Shader()
+		.add(GL_VERTEX_SHADER, "chunkblazer/wallvert.glsl")
+		.add(GL_FRAGMENT_SHADER, "chunkblazer/wallfrag.glsl");
+
 	public static int glProgram;
 
 	// Hook invoked during the scene pass, immediately after the scene program is
@@ -156,6 +161,19 @@ public abstract class GpuPlugin extends Plugin implements DrawCallbacks
 	// NOT from a BeforeRender event, where the program/FBO state isn't set up.
 	// Set by ChunkBlazerGpuPlugin; null when no addon is attached.
 	public static Runnable sceneUniformHook;
+
+	// The chunk wall to draw into the scene, so the world in front of it hides it: its colour
+	// (r, g, b, a) then WALL_STRIDE floats a vertex (scene-local x, y, z, up 0..1, tiles along,
+	// part: 1 into a chunk the player can afford, and energy: its glow 0..1), in triangles. Null or empty: none. Set by ChunkBlazerGpuPlugin.
+	public static java.util.function.Supplier<float[]> wallHook;
+	public static final int WALL_STRIDE = 7;
+	private int glWallProgram;
+	private int uniWallProj;
+	private int uniWallTime;
+	private int uniWallColor;
+	private int vaoWall;
+	private int vboWall;
+	private float[] lastWorldProj;
 
 	private int glUiProgram;
 
@@ -585,6 +603,7 @@ public abstract class GpuPlugin extends Plugin implements DrawCallbacks
 		Template template = createTemplate();
 		glProgram = PROGRAM.compile(template);
 		glUiProgram = UI_PROGRAM.compile(template);
+		glWallProgram = WALL_PROGRAM.compile(template);
 
 		glBindVertexArray(0);
 
@@ -611,6 +630,10 @@ public abstract class GpuPlugin extends Plugin implements DrawCallbacks
 		uniBase = glGetUniformLocation(glProgram, "base");
 		uniColorblindIntensity = glGetUniformLocation(glProgram, "colorblindIntensity");
 
+		uniWallProj = glGetUniformLocation(glWallProgram, "worldProj");
+		uniWallTime = glGetUniformLocation(glWallProgram, "time");
+		uniWallColor = glGetUniformLocation(glWallProgram, "color");
+
 		uniTex = glGetUniformLocation(glUiProgram, "tex");
 		uniTexTargetDimensions = glGetUniformLocation(glUiProgram, "targetDimensions");
 		uniTexSourceDimensions = glGetUniformLocation(glUiProgram, "sourceDimensions");
@@ -625,6 +648,9 @@ public abstract class GpuPlugin extends Plugin implements DrawCallbacks
 
 		glDeleteProgram(glUiProgram);
 		glUiProgram = 0;
+
+		glDeleteProgram(glWallProgram);
+		glWallProgram = 0;
 	}
 
 	private void initVao()
@@ -633,6 +659,9 @@ public abstract class GpuPlugin extends Plugin implements DrawCallbacks
 		vaoUiHandle = glGenVertexArrays();
 		// Create UI buffer
 		vboUiHandle = glGenBuffers();
+
+		vaoWall = glGenVertexArrays();
+		vboWall = glGenBuffers();
 		glBindVertexArray(vaoUiHandle);
 
 		FloatBuffer vboUiBuf = GpuFloatBuffer.allocateDirect(5 * 4);
@@ -667,6 +696,11 @@ public abstract class GpuPlugin extends Plugin implements DrawCallbacks
 
 		glDeleteVertexArrays(vaoUiHandle);
 		vaoUiHandle = 0;
+
+		glDeleteBuffers(vboWall);
+		vboWall = 0;
+		glDeleteVertexArrays(vaoWall);
+		vaoWall = 0;
 	}
 
 	private void initBuffers()
@@ -961,6 +995,7 @@ public abstract class GpuPlugin extends Plugin implements DrawCallbacks
 		Mat4.mul(projectionMatrix, Mat4.rotateY(cameraYaw));
 		Mat4.mul(projectionMatrix, Mat4.translate(-cameraX, -cameraY, -cameraZ));
 		glUniformMatrix4fv(uniWorldProj, false, projectionMatrix);
+		lastWorldProj = projectionMatrix;
 
 		glUniformMatrix4fv(uniEntityProj, false, IDENTITY);
 
@@ -1036,12 +1071,51 @@ public abstract class GpuPlugin extends Plugin implements DrawCallbacks
 
 	private void postDrawToplevel()
 	{
+		drawChunkWall();
 		glDisable(GL_BLEND);
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_DEPTH_TEST);
 
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, awtContext.getFramebuffer(false));
 		sceneFboValid = true;
+	}
+
+	/**
+	 * ChunkBlazer's chunk wall, into the scene while its depth and blending are still set up:
+	 * depth-tested so the world in front hides it, both sides showing.
+	 */
+	private void drawChunkWall()
+	{
+		java.util.function.Supplier<float[]> hook = wallHook;
+		float[] data = hook == null ? null : hook.get();
+		if (data == null || data.length < 4 + WALL_STRIDE * 3 || glWallProgram == 0 || lastWorldProj == null)
+		{
+			return;
+		}
+		glUseProgram(glWallProgram);
+		glUniformMatrix4fv(uniWallProj, false, lastWorldProj);
+		glUniform1f(uniWallTime, (System.currentTimeMillis() % 3_600_000L) / 1000f);
+		glUniform4f(uniWallColor, data[0], data[1], data[2], data[3]);
+		glBindVertexArray(vaoWall);
+		glBindBuffer(GL_ARRAY_BUFFER, vboWall);
+		glBufferData(GL_ARRAY_BUFFER, java.util.Arrays.copyOfRange(data, 4, data.length), GL_STREAM_DRAW);
+		int stride = WALL_STRIDE * Float.BYTES;
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, false, stride, 0);
+		for (int attrib = 1; attrib <= 4; attrib++)
+		{
+			glEnableVertexAttribArray(attrib);
+			glVertexAttribPointer(attrib, 1, GL_FLOAT, false, stride, (2 + attrib) * Float.BYTES);
+		}
+		glDisable(GL_CULL_FACE);
+		// See-through, so it tests depth but doesn't write it.
+		glDepthMask(false);
+		glDrawArrays(GL_TRIANGLES, 0, (data.length - 4) / WALL_STRIDE);
+		glDepthMask(true);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);
+		glUseProgram(glProgram);
+		checkGLErrors();
 	}
 
 	private void blitSceneFbo()

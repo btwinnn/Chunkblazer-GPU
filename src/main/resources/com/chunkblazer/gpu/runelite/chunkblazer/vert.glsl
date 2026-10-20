@@ -8,8 +8,28 @@ uniform int chunkblazer_useGray;
 uniform int chunkblazer_baseX;
 uniform int chunkblazer_baseY;
 uniform int chunkblazer_lockedGrid[CHUNKBLAZER_GRID * CHUNKBLAZER_GRID];
+// Tiles kept clear of grey: ChunkBlazer's tutorial keeps the room a new account starts in
+// clear, moulded to it. Bit x of row y is world tile clearOrigin + (x, y). All zero: none.
+#define CHUNKBLAZER_CLEAR_ROWS 32
+uniform ivec2 chunkblazer_clearOrigin;
+uniform int chunkblazer_clearMask[CHUNKBLAZER_CLEAR_ROWS];
+
+bool chunkblazer_clearTile(int tx, int ty) {
+  int x = tx - chunkblazer_clearOrigin.x;
+  int y = ty - chunkblazer_clearOrigin.y;
+  if (x < 0 || y < 0 || x >= 32 || y >= CHUNKBLAZER_CLEAR_ROWS) {
+    return false;
+  }
+  return ((chunkblazer_clearMask[y] >> x) & 1) != 0;
+}
 
 out float chunkblazer_grayAmount;
+// 1.0 inside the tutorial's clear area: an unlock sweep leaves it alone too.
+out float chunkblazer_clearAmount;
+// Position relative to the lock grid's origin, in 1/128-tile units:
+// .x = east, .y = height above ground (up is positive), .z = north.
+// Kept grid-relative (max ~57k) so it stays precise as a float.
+out vec3 chunkblazer_gridPos;
 
 // Locked flag (1.0 / 0.0) for the region containing world-unit position (wx, wy).
 // gridBaseX/Y are the grid's origin region; positions outside the grid return
@@ -49,5 +69,21 @@ void chunkblazer_vert(vec3 vertex) {
     locked = max(locked, chunkblazer_lockedAt(wx + offsets[i].x, wy + offsets[i].y, gridBaseX, gridBaseY));
   }
 
+  // A vertex on a tile's edge or corner counts for every tile it touches, so the clear
+  // room's walls stay clear and its edge fades over one tile outside.
+  chunkblazer_clearAmount = 0.0;
+  int tx = wx >> 7;
+  int ty = wy >> 7;
+  int tx0 = (wx & 127) == 0 ? tx - 1 : tx;
+  int ty0 = (wy & 127) == 0 ? ty - 1 : ty;
+  if (chunkblazer_clearTile(tx, ty) || chunkblazer_clearTile(tx0, ty) || chunkblazer_clearTile(tx, ty0)
+    || chunkblazer_clearTile(tx0, ty0)) {
+    locked = 0.0;
+    chunkblazer_clearAmount = 1.0;
+  }
+
+
   chunkblazer_grayAmount = float(chunkblazer_useGray) * locked;
+  // OSRS scene Y grows downward, so negate it for "height".
+  chunkblazer_gridPos = vec3(wx - (gridBaseX << 13), -vertex.y, wy - (gridBaseY << 13));
 }

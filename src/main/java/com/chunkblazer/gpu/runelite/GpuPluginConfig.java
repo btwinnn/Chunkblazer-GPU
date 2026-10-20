@@ -314,4 +314,131 @@ public interface GpuPluginConfig extends Config
 	{
 		return ShadingLevel.LIGHT;
 	}
+
+	@ConfigSection(
+		name = "Unlock Sweep & Flame Walls",
+		description = "Walls on chunk borders, and the lava sweep played when a chunk unlocks",
+		position = 16,
+		closedByDefault = false
+	)
+	String unlockAnimSection = "unlockAnim";
+
+	@ConfigItem(
+		keyName = "gpuUnlockSweep",
+		name = "Unlock Sweep",
+		description = "When a chunk unlocks, colour fans out from the wall tile nearest you and the "
+			+ "flame wall drops in step with it",
+		section = unlockAnimSection,
+		position = 0
+	)
+	default boolean gpuUnlockSweep()
+	{
+		return true;
+	}
+
+	@Range(min = 250, max = 10000)
+	@Units(Units.MILLISECONDS)
+	@ConfigItem(
+		keyName = "gpuUnlockDuration",
+		name = "Duration",
+		description = "How long the unlock animation lasts",
+		section = unlockAnimSection,
+		position = 2
+	)
+	default int gpuUnlockDuration()
+	{
+		return 2500;
+	}
+
+	@Alpha
+	@ConfigItem(
+		keyName = "gpuFlameColor",
+		name = "Sweep Glow Colour",
+		description = "Colour of the glowing sweep front as colour spreads across the chunk (alpha = strength)",
+		section = unlockAnimSection,
+		position = 3
+	)
+	default Color gpuFlameColor()
+	{
+		return new Color(255, 34, 10, 230);
+	}
+
+	@Range(min = 1, max = 64)
+	@ConfigItem(
+		keyName = "gpuUnlockGlowWidth",
+		name = "Glow Width",
+		description = "Thickness of the glowing sweep front, in tiles",
+		section = unlockAnimSection,
+		position = 4
+	)
+	default int gpuUnlockGlowWidth()
+	{
+		return 10;
+	}
+
+	@Range(min = 0, max = 65535)
+	@ConfigItem(
+		keyName = "gpuTestChunk",
+		name = "Test Chunk",
+		description = "Region ID of the chunk the test options below act on. "
+			+ "Tick 'Use Chunk I'm In' to fill it in from where you're standing.",
+		section = unlockAnimSection,
+		position = 5
+	)
+	default int gpuTestChunk()
+	{
+		return 6447;
+	}
+
+	@ConfigItem(
+		keyName = "gpuTestChunkUseCurrent",
+		name = "Use Chunk I'm In",
+		description = "Tick to set Test Chunk to the chunk you're standing in. Unticks itself.",
+		section = unlockAnimSection,
+		position = 6
+	)
+	default boolean gpuTestChunkUseCurrent()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+		keyName = "gpuForceTestChunkLocked",
+		name = "Show Test Chunk Locked",
+		description = "Testing only: render the test chunk as locked (grey, with flame walls) even if it's "
+			+ "unlocked in ChunkBlazer, so you can watch it unlock.",
+		section = unlockAnimSection,
+		position = 7
+	)
+	default boolean gpuForceTestChunkLocked()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+		keyName = "gpuUnlockTest",
+		name = "Play Unlock On Test Chunk",
+		description = "Tick to play the unlock sweep on the test chunk, fanning out from the wall nearest you "
+			+ "(stand in or near it). Unticks itself, so tick again to replay.",
+		section = unlockAnimSection,
+		position = 8
+	)
+	default boolean gpuUnlockTest()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+		keyName = "gpuFlameWalls",
+		name = "Chunk Walls",
+		description = "Draw ChunkBlazer's wall on every border between unlocked and locked chunks, in its "
+			+ "Wall Colour, sinking away in step with the unlock sweep. Turn off ChunkBlazer's own "
+			+ "Show Chunk Walls to avoid doubled walls.",
+		section = unlockAnimSection,
+		position = 9
+	)
+	default boolean gpuFlameWalls()
+	{
+		return true;
+	}
 }

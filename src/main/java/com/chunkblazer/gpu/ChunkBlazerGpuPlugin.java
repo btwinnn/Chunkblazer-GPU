@@ -92,6 +92,7 @@ public class ChunkBlazerGpuPlugin extends Plugin
 	@Inject
 	private ChunkBlazerGpuAddon addon;
 
+
 	@Override
 	protected void startUp()
 	{
@@ -115,6 +116,7 @@ public class ChunkBlazerGpuPlugin extends Plugin
 					log.error("Error updating ChunkBlazer greyscale uniforms", ex);
 				}
 			};
+			GpuPlugin.wallHook = addon::getWallMesh;
 		});
 	}
 
@@ -124,6 +126,7 @@ public class ChunkBlazerGpuPlugin extends Plugin
 		clientThread.invoke(() ->
 		{
 			GpuPlugin.sceneUniformHook = null;
+			GpuPlugin.wallHook = null;
 			gpuPlugin.stop();
 			eventBus.unregister(gpuPlugin);
 			addon.reset();

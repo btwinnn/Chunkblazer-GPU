@@ -36,7 +36,6 @@ import java.util.Objects;
 import java.util.Set;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.gameval.VarPlayerID;
@@ -293,7 +292,6 @@ public class ChunkBlazerGpuAddon
 		Set<Integer> unlocked = readUnlockedRegionIds();
 		long now = System.currentTimeMillis();
 		trackNewUnlocks(unlocked, now);
-		handleTestToggle(now);
 		uploadUnlockAnimUniforms();
 
 		// Don't grey out instanced areas (raids, GoTR, etc.) when the instance
@@ -546,49 +544,6 @@ public class ChunkBlazerGpuAddon
 	private static float rise(float m)
 	{
 		return 1f - (1f - m) * (1f - m) * (1f - m);
-	}
-
-	/**
-	 * Test controls: "Use Chunk I'm In" copies the player's region into Test
-	 * Chunk; "Play Unlock On Test Chunk" plays the sweep there from wherever
-	 * the player stands. Both untick themselves.
-	 */
-	private void handleTestToggle(long now)
-	{
-		var player = client.getLocalPlayer();
-		if (config.gpuTestChunkUseCurrent())
-		{
-			configManager.setConfiguration(GpuPluginConfig.GROUP, "gpuTestChunkUseCurrent", false);
-			if (player != null)
-			{
-				int here = player.getWorldLocation().getRegionID();
-				configManager.setConfiguration(GpuPluginConfig.GROUP, "gpuTestChunk", here);
-				chat("Test chunk set to " + here + ".");
-			}
-		}
-
-		if (!config.gpuUnlockTest())
-		{
-			return;
-		}
-		configManager.setConfiguration(GpuPluginConfig.GROUP, "gpuUnlockTest", false);
-		if (player == null)
-		{
-			return;
-		}
-		int test = config.gpuTestChunk();
-		int here = player.getWorldLocation().getRegionID();
-		if (Math.abs((here >> 8) - (test >> 8)) > 2 || Math.abs((here & 0xFF) - (test & 0xFF)) > 2)
-		{
-			chat("Chunk " + test + " isn't in your loaded scene (you're in " + here
-				+ "). Walk to or next to it to see the test.");
-		}
-		startAnimation(test, now, true);
-	}
-
-	private void chat(String message)
-	{
-		client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "[ChunkBlazer GPU] " + message, null);
 	}
 
 	/** Eased 0..1 progress for a region that is animating, or -1 if it isn't. */
@@ -1253,10 +1208,6 @@ public class ChunkBlazerGpuAddon
 	 */
 	private boolean isAccessible(int regionId, Set<Integer> unlocked)
 	{
-		if (config.gpuForceTestChunkLocked() && regionId == config.gpuTestChunk())
-		{
-			return false;
-		}
 		if (!PRIF_CITY_REGIONS.contains(regionId))
 		{
 			int regionY = regionId & 0xFF;

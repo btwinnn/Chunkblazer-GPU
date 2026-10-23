@@ -312,7 +312,7 @@ public interface GpuPluginConfig extends Config
 	)
 	default ShadingLevel gpuShadingLevel()
 	{
-		return ShadingLevel.LIGHT;
+		return ShadingLevel.HEAVY;
 	}
 
 	@ConfigSection(
@@ -347,7 +347,7 @@ public interface GpuPluginConfig extends Config
 	)
 	default int gpuUnlockDuration()
 	{
-		return 2500;
+		return 5000;
 	}
 
 	@Alpha
@@ -376,58 +376,6 @@ public interface GpuPluginConfig extends Config
 		return 10;
 	}
 
-	@Range(min = 0, max = 65535)
-	@ConfigItem(
-		keyName = "gpuTestChunk",
-		name = "Test Chunk",
-		description = "Region ID of the chunk the test options below act on. "
-			+ "Tick 'Use Chunk I'm In' to fill it in from where you're standing.",
-		section = unlockAnimSection,
-		position = 5
-	)
-	default int gpuTestChunk()
-	{
-		return 6447;
-	}
-
-	@ConfigItem(
-		keyName = "gpuTestChunkUseCurrent",
-		name = "Use Chunk I'm In",
-		description = "Tick to set Test Chunk to the chunk you're standing in. Unticks itself.",
-		section = unlockAnimSection,
-		position = 6
-	)
-	default boolean gpuTestChunkUseCurrent()
-	{
-		return false;
-	}
-
-	@ConfigItem(
-		keyName = "gpuForceTestChunkLocked",
-		name = "Show Test Chunk Locked",
-		description = "Testing only: render the test chunk as locked (grey, with flame walls) even if it's "
-			+ "unlocked in ChunkBlazer, so you can watch it unlock.",
-		section = unlockAnimSection,
-		position = 7
-	)
-	default boolean gpuForceTestChunkLocked()
-	{
-		return false;
-	}
-
-	@ConfigItem(
-		keyName = "gpuUnlockTest",
-		name = "Play Unlock On Test Chunk",
-		description = "Tick to play the unlock sweep on the test chunk, fanning out from the wall nearest you "
-			+ "(stand in or near it). Unticks itself, so tick again to replay.",
-		section = unlockAnimSection,
-		position = 8
-	)
-	default boolean gpuUnlockTest()
-	{
-		return false;
-	}
-
 	@ConfigItem(
 		keyName = "gpuFlameWalls",
 		name = "Chunk Walls",
@@ -435,7 +383,7 @@ public interface GpuPluginConfig extends Config
 			+ "Wall Colour, sinking away in step with the unlock sweep. Turn off ChunkBlazer's own "
 			+ "Show Chunk Walls to avoid doubled walls.",
 		section = unlockAnimSection,
-		position = 9
+		position = 5
 	)
 	default boolean gpuFlameWalls()
 	{
